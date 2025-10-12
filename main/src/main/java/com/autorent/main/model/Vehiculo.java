@@ -46,7 +46,7 @@ public class Vehiculo {
     Double precioalquilo;
 
     @Column(name = "estveh")
-    Boolean estveh;
+    Boolean estado;
 
     @Column(name = "fecharegistro")
     LocalDate fecharegistro;

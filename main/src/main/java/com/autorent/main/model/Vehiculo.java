@@ -2,6 +2,7 @@ package com.autorent.main.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -52,6 +53,9 @@ public class Vehiculo {
 
     @Column(name = "fotoveh")
     String foto;
+
+    @Transient
+    private MultipartFile archivoFoto;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idprop")

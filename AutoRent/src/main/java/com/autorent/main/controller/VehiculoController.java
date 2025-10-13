@@ -1,6 +1,8 @@
 package com.autorent.main.controller;
 
+import com.autorent.main.model.Propietario;
 import com.autorent.main.model.Vehiculo;
+import com.autorent.main.repository.PropietarioRepository;
 import com.autorent.main.repository.VehiculoRepository;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -11,7 +13,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +25,10 @@ public class VehiculoController {
 
     @Autowired
     Cloudinary cloudinary;
+    @Autowired
     VehiculoRepository vehiculoRepository;
+    @Autowired
+    PropietarioRepository propietarioRepository;
 
     @GetMapping("registro")
     String nuevoVehiculo(Model model)
@@ -32,15 +39,20 @@ public class VehiculoController {
     }
 
     @PostMapping("registro")
-    String registrarVehiculo(Model model, Vehiculo vehiculo)
+    String registrarVehiculo(Model model, Vehiculo vehiculo, RedirectAttributes ra)
     {
-        vehiculoRepository.save(vehiculo);
+        //temporalmente hasta desarrollar el modulo de usuarios, se trabajara con el propietario 1
+        Propietario propietarioPorDefecto = propietarioRepository.getReferenceById(1);
+
+        vehiculo.setFecharegistro(LocalDate.now());
+        vehiculo.setPropietario(propietarioPorDefecto);
+
         MultipartFile archivo = vehiculo.getArchivoFoto();
 
-        // 1. Verifica que se haya subido un archivo
+        // Verifica que se haya subido un archivo
         if (!archivo.isEmpty()) {
             try {
-                // 2. Sube el archivo a Cloudinary
+                // Sube el archivo a Cloudinary
                 Map uploadResult = cloudinary.uploader().upload(
                         archivo.getBytes(), // El contenido binario del archivo
                         ObjectUtils.asMap(
@@ -48,18 +60,35 @@ public class VehiculoController {
                         )
                 );
 
-                // 3. Obtiene la URL pública del resultado
+                // Obtiene la URL pública del resultado
                 String urlFoto = uploadResult.get("secure_url").toString();
 
-                // 4. Establece la URL en el campo 'foto' (el que va a la BD)
+                // Establece la URL en el campo 'foto'
                 vehiculo.setFoto(urlFoto);
 
             } catch (Exception e) {
                 // Manejo de errores de Cloudinary (ej. clave incorrecta, fallo de red)
                 System.err.println("Error al subir a Cloudinary: " + e.getMessage());
-                // Puedes retornar una vista de error o manejarlo de otra forma
             }
         }
-        return "redirect:/vehiculos/registrar";
+
+        try {
+            // Guardar en la BD
+            vehiculoRepository.save(vehiculo);
+
+            // Éxito: Añadir un mensaje flash
+            ra.addFlashAttribute("mensaje", "✅ ¡Vehículo registrado con éxito!");
+
+            return "redirect:/vehiculos/registro";
+        } catch (Exception e) {
+            // Error: Capturar y añadir un mensaje de error
+            ra.addFlashAttribute("error", "❌ Error al registrar el vehículo.");
+            System.err.println("Error de BD: " + e.getMessage());
+
+            // Añadir el objeto vehiculo de vuelta para rellenar el formulario
+            ra.addFlashAttribute("vehiculo", vehiculo);
+
+            return "redirect:/vehiculos/registro";
+        }
     }
 }

@@ -31,7 +31,7 @@ public class Vehiculo {
     String color;
 
     @Column(name = "transveh")
-    String trasmision;
+    String transmision;
 
     @Column(name = "combuveh")
     String combustible;

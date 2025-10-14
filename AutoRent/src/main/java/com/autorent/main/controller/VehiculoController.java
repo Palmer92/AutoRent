@@ -33,7 +33,9 @@ public class VehiculoController {
     @GetMapping("registro")
     String nuevoVehiculo(Model model)
     {
-        model.addAttribute("vehiculo", new Vehiculo());
+        if (!model.containsAttribute("vehiculo")) {
+            model.addAttribute("vehiculo", new Vehiculo());
+        }
         return "vehiculos/registrar";
 
     }

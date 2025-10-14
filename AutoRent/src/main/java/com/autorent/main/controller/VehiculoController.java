@@ -80,9 +80,18 @@ public class VehiculoController {
             ra.addFlashAttribute("mensaje", "✅ ¡Vehículo registrado con éxito!");
 
             return "redirect:/vehiculos/registro";
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+
+            String errorMessage = "❌ Error: La placa " + vehiculo.getPlaca() + " ya está registrada.";
+            ra.addFlashAttribute("error", errorMessage);
+            System.err.println("Error de Integridad de Datos: " + e.getMessage());
+
+            ra.addFlashAttribute("vehiculo", vehiculo);
+
+            return "redirect:/vehiculos/registro";
         } catch (Exception e) {
             // Error: Capturar y añadir un mensaje de error
-            ra.addFlashAttribute("error", "❌ Error al registrar el vehículo.");
+            ra.addFlashAttribute("error", "❌ Error inesperado al registrar el vehículo.");
             System.err.println("Error de BD: " + e.getMessage());
 
             // Añadir el objeto vehiculo de vuelta para rellenar el formulario
